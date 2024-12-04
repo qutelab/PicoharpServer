@@ -19,7 +19,8 @@ sn.initDevice(MeasMode.T2)
 # set the configuration for your device type
 sn.loadIniConfig("PicoharpConfig\HH.ini")
 
-
+# Saving path
+working_dir = None
 
 def run_hist(identifer):
     """
@@ -27,6 +28,9 @@ def run_hist(identifer):
     :param identifer: String ID for histogram to be saved with
     :return: 0 for success, -1 for failure
     """
+
+    if working_dir is None:
+        raise RuntimeError("Image directory not set!")
 
     sn.histogram.measure(acqTime=1000,savePTU=True)
 
@@ -36,7 +40,7 @@ def run_hist(identifer):
     rst = np.zeros((len(data), 2))
     rst[:, 0] = data
     rst[:, 1] = bins
-    np.savetxt(f"output/{identifer}-hist-ph330.txt", rst)
+    np.savetxt(working_dir + f"{identifer}-hist.txt", rst)
 
     return 0
 
@@ -54,6 +58,7 @@ if __name__ == '__main__':
             s.bind((HOST, PORT))
             s.listen()
             try:
+                print("Waiting for command...")
                 conn, addr = s.accept()
                 with conn:
                     #print('Connected by', addr)
@@ -81,8 +86,17 @@ if __name__ == '__main__':
                         print(f"Sending response: {response}")
                         conn.sendall(response.encode())
                     elif cmd == 'new:img':
-                        path = "output/scan" + str(datetime.now().strftime("%Y%m%d%H%M%S"))
+                        path = "output/scans/" + str(datetime.now().strftime("%Y%m%d%H%M%S"))
                         os.mkdir(path)
+                        working_dir = path + "/"
+                    elif cmd == "new:line":
+                        if param == "":
+                            raise RuntimeError("No parameter provided for new:line")
+                        if working_dir is None:
+                            raise RuntimeError("Must call new:img before new:line")
+                        path = working_dir + f"line{param}"
+                        os.mkdir(path)
+                        working_dir = path + "/"
                     else:
                         print(f"Unknown command: {cmd}")
                         response = f'{-1}'
