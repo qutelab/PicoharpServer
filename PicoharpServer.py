@@ -15,11 +15,12 @@ sn = snAPI()
 sn.getDevice()
 sn.setLogLevel(logLevel=LogLevel.DataFile, onOff=True)
 # initialize the device
-sn.initDevice(MeasMode.T2)
+sn.initDevice(MeasMode.T3)
 # set the configuration for your device type
-sn.loadIniConfig("PicoharpConfig\HH.ini")
+sn.loadIniConfig("PicoharpConfig\PH330_Edge.ini")
 
 # Saving path
+scan_dir = None
 working_dir = None
 
 def run_hist(identifer):
@@ -29,16 +30,16 @@ def run_hist(identifer):
     :return: 0 for success, -1 for failure
     """
 
-    if working_dir is None:
+    if scan_dir is None:
         raise RuntimeError("Image directory not set!")
 
     sn.histogram.measure(acqTime=1000,savePTU=True)
 
-    data, bins = sn.histogram.getData()
-    data = data[0]
+    counts, bins = sn.histogram.getData()
+    counts = counts[1] # 0 is sync, 1 is ch1, 2 is ch2, etc
 
-    rst = np.zeros((len(data), 2))
-    rst[:, 0] = data
+    rst = np.zeros((len(counts), 2))
+    rst[:, 0] = counts
     rst[:, 1] = bins
     np.savetxt(working_dir + f"{identifer}-hist.txt", rst)
 
@@ -49,8 +50,9 @@ def get_histog_cps():
 
     :return: Histogram cps
     """
+    cnt = sn.getCountRates() # Not sure if this is correct count rate. Is this the same as histog CPS?
+    return cnt[1]  # 0 is sync, 1 is ch1, 2 is ch2, etc
 
-    return np.random.randint(500000, 1000000)
 
 if __name__ == '__main__':
     while True:
@@ -88,13 +90,13 @@ if __name__ == '__main__':
                     elif cmd == 'new:img':
                         path = "output/scans/" + str(datetime.now().strftime("%Y%m%d%H%M%S"))
                         os.mkdir(path)
-                        working_dir = path + "/"
+                        scan_dir = path + "/"
                     elif cmd == "new:line":
                         if param == "":
                             raise RuntimeError("No parameter provided for new:line")
-                        if working_dir is None:
+                        if scan_dir is None:
                             raise RuntimeError("Must call new:img before new:line")
-                        path = working_dir + f"line{param}"
+                        path = scan_dir + f"line{param}"
                         os.mkdir(path)
                         working_dir = path + "/"
                     else:
