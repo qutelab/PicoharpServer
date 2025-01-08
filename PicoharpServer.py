@@ -33,14 +33,14 @@ def run_hist(identifer):
     if scan_dir is None:
         raise RuntimeError("Image directory not set!")
 
-    sn.histogram.measure(acqTime=1000,savePTU=True)
+    sn.histogram.measure(acqTime=45000,savePTU=False)
 
     counts, bins = sn.histogram.getData()
     counts = counts[1] # 0 is sync, 1 is ch1, 2 is ch2, etc
 
     rst = np.zeros((len(counts), 2))
-    rst[:, 0] = counts
-    rst[:, 1] = bins
+    rst[:, 1] = counts
+    rst[:, 0] = bins
     np.savetxt(working_dir + f"{identifer}-hist.txt", rst)
 
     return 0
