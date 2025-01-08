@@ -9,7 +9,7 @@ causes many dependency issues. This server is a solution allowing Qudi to send s
 PicoharpServer only implements support for a very limited subset of the snAPI commands, it is intended for creating 
 lifetime maps with legacy Qudi. Additional commands could be implemented for other use cases.
 
-Picoharp settings are adjusted in the `.ini` file in `/PicoharpConfig/`. Example:
+Picoharp settings are adjusted in the `.ini` file in `PicoharpConfig/`. Example:
 ```
 [Device]
 HystCode = 0
